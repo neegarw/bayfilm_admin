@@ -4,7 +4,7 @@ import { axiosInstance, axiosInstanceMultiPart } from "../config/axiosInstance"
 // Butun kategorileri getirmek ucun funksiya
 export async function getFullCategory() {
     try {
-        const response = await axiosInstance.get('/categories');
+        const response = await axiosInstance.get('/category');
         return response.data;
     } catch (error) {
         console.error('Categoriyalarin gelmeyinde problem oldu:', error.response?.data || error.message);
@@ -12,7 +12,7 @@ export async function getFullCategory() {
     }
 }
 
-export async function getFullCSubcategory() {
+export async function getFullSubCategory() {
     try {
         const response = await axiosInstance.get('/categories');
         return response.data;
@@ -36,7 +36,7 @@ export async function getCategoryById(id) {
 // Yeni bir kategori yarat ucun funk
 export async function createCategory(categoryData) {
     try {
-        const response = await axiosInstance.post('/categories', categoryData);
+        const response = await axiosInstance.post('/category', categoryData);
         return response.data;
     } catch (error) {
         console.error('Kategoriyaya yaradilan vaxt problem oldu:', error.response?.data || error.message);
@@ -47,7 +47,7 @@ export async function createCategory(categoryData) {
 // id'ye göre kategoriyani deyismek ucun funk
 export async function editCategoryById(id, categoryData) {
     try {
-        const response = await axiosInstance.put(`/categories/${id}`, categoryData);
+        const response = await axiosInstance.put(`/category/${id}`, categoryData);
         return response.data;
     } catch (error) {
         console.error('Kategoriyaya duzelis olan da problem oldu:', error.response?.data || error.message);
@@ -58,7 +58,7 @@ export async function editCategoryById(id, categoryData) {
 //  id'ye göre kategoriyani silmek ucun funk
 export async function deleteCategoryById(id) {
     try {
-        const response = await axiosInstance.delete(`/categories/${id}`);
+        const response = await axiosInstance.delete(`/category/${id}`);
         return response.data;
     } catch (error) {
         console.error('Kategori silinen vaxt problem oldu:', error.response?.data || error.message);
@@ -195,5 +195,5 @@ export default {
     deleteSubcategory,
     deleteImage,
     createImg,
-    getFullCSubcategory
+    getFullSubCategory
 };

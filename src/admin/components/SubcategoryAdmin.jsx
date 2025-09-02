@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getFullCategory, getFullCSubcategory } from '../../api/api';
+import { getFullCategory, getFullSubCategory } from '../../api/api';
 import { BiEdit } from 'react-icons/bi';
 import { MdDeleteForever } from 'react-icons/md';
 
@@ -15,7 +15,7 @@ function SubcategoryAdmin() {
 
     async function fetchCategories() {
         const cats = await getFullCategory();
-        const subcats = await getFullCSubcategory();
+        const subcats = await getFullSubCategory();
         setCategories(cats);
         setSubCategory(subcats)
     }

@@ -7,12 +7,5 @@ export default defineConfig({
   plugins: [react(), envCompatible()],
   server: {
     port: 3999,
-    proxy: {
-      '/api': {
-        target: 'https://telefonclub.yetim.me',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
-      }
-    }
   }
 });
