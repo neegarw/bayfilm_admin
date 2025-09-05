@@ -7,6 +7,9 @@ const tokenEnv = configObj.token;
 const authVerify = async () => {
     const cookies = new Cookies();
     const token = cookies.get(`${tokenEnv}`);
+    console.log("🔑 tokenEnv:", tokenEnv);
+    console.log("🍪 token:", token);
+
     if (!token) {
         return false;
     }
@@ -16,9 +19,9 @@ const authVerify = async () => {
                 Authorization: `Bearer ${token}`
             }
         });
-        
+
         cookies.set("username", response.data.user_login)
-        
+
 
         if (response.data.status == true) {
             return true;

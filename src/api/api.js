@@ -14,7 +14,7 @@ export async function getFullCategory() {
 
 export async function getFullSubCategory() {
     try {
-        const response = await axiosInstance.get('/categories');
+        const response = await axiosInstance.get('/category');
         return response.data;
     } catch (error) {
         console.error('Categoriyalarin gelmeyinde problem oldu:', error.response?.data || error.message);
@@ -25,7 +25,7 @@ export async function getFullSubCategory() {
 //  id'ye göre kategoriyi getirmek ucun funk
 export async function getCategoryById(id) {
     try {
-        const response = await axiosInstance.get(`/categories/${id}`);
+        const response = await axiosInstance.get(`/category/${id}`);
         return response.data;
     } catch (error) {
         console.error('Kategori gələndə problem oldu:', error.response?.data || error.message);
@@ -133,7 +133,6 @@ export async function getProductById(id) {
 
 // id'ye göre mehsulu deyismek ucun funk
 export async function editProduct(id, productData) {
-
     try {
         const response = await axiosInstance.put(`/products/${id}`, productData);
         return response.data;

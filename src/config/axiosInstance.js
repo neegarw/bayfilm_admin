@@ -20,5 +20,5 @@ const axiosInstance = axios.create({
         "Authorization": token ? `Bearer ${token}` : undefined
     }
 });
-
+export default axiosInstance;
 export { axiosInstance, axiosInstanceMultiPart };

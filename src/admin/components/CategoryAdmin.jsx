@@ -1,21 +1,19 @@
 import { useEffect, useState } from 'react';
-import { BiEdit } from 'react-icons/bi';
 import { MdDeleteForever } from 'react-icons/md';
-import { getFullCategory, createCategory, createImg, deleteCategoryById, editCategoryById } from '../../api/api';
+import { getFullCategory, createCategory, createImg, deleteCategoryById } from '../../api/api';
+import toast, { Toaster } from 'react-hot-toast';
 
 function CategoryAdmin() {
-  const [deletePopup, setDeletePopup] = useState(false);
   const [addPopup, setAddPopup] = useState(false);
+  const [deletePopup, setDeletePopup] = useState(null); // silinəcək id burada saxlanacaq
   const [category, setCategory] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(""); // ❌ error mesajı üçün
+  const [error, setError] = useState("");
 
   // yeni kateqoriya üçün state
   const [title, setTitle] = useState("");
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [editId, setEditId] = useState(null);
-
 
   useEffect(() => {
     fullCategory();
@@ -35,7 +33,7 @@ function CategoryAdmin() {
     }
   };
 
-  // post sorğusu
+  // yalnız post sorğusu (add)
   const handleSubmit = async () => {
     if (!title) {
       setError("Zəhmət olmasa başlıq daxil edin!");
@@ -47,68 +45,54 @@ function CategoryAdmin() {
       setError("");
 
       let imgUrl = preview; // default əvvəlki şəkil qalır
-      if (image) {          // yeni şəkil seçilibsə upload et
+      if (image) {
         const imgResponse = await createImg(image);
         imgUrl = imgResponse.file.path;
       }
 
       const data = { title, image: imgUrl };
 
-      if (editId) {
-        await editCategoryById(editId, data);
-        alert("Kateqoriya yeniləndi ✅");
-      } else {
-        await createCategory(data);
-        alert("Kateqoriya əlavə olundu ✅");
-      }
+      await createCategory(data);
+      toast.success("✅ Kateqoriya əlavə olundu!");
 
       // resetlə
       setAddPopup(false);
       setTitle("");
       setImage(null);
       setPreview(null);
-      setEditId(null);
       fullCategory();
 
     } catch (err) {
       console.error(err);
-      setError("Xəta baş verdi ❌");
+      toast.error("❌ Xəta baş verdi, yenidən yoxlayın!");
     } finally {
       setLoading(false);
     }
   };
-
 
   // kateqoriyanı sil
-  const handleDelete = async (id) => {
-    if (!window.confirm("Kateqoriyanı silmək istədiyinizə əminsiniz?")) return;
-
+  const confirmDelete = async () => {
     try {
       setLoading(true);
-      await deleteCategoryById(id);
-      alert("Kateqoriya silindi ✅");
-      fullCategory(); // state-i yenilə
+      await deleteCategoryById(deletePopup);
+      toast.success("🗑️ Kateqoriya silindi!");
+      fullCategory();
+      setDeletePopup(null);
     } catch (err) {
       console.error(err);
-      setError("Kateqoriyanı silmək mümkün olmadı ❌");
+      toast.error("❌ Kateqoriyanı silmək mümkün olmadı!");
     } finally {
       setLoading(false);
     }
   };
-  //edit funksiyası
-  const handleEdit = (item) => {
-    setEditId(item.id);           // hansını edit edirik
-    setTitle(item.image);         // input-a hazır title gəlsin
-    setPreview(item.title);       // şəkil əvvəlcədən görünsün
-    setAddPopup(true);            // modal açılsın
-  };
-
 
   return (
-    <main>
+    <main className="relative">
+      <Toaster />
       <h1 className="text-center text-[20px] font-[500] my-[20px]">
         Kateqoriyaların idarə olunması formu:
       </h1>
+
       <div>
         <button
           onClick={() => setAddPopup(true)}
@@ -121,8 +105,8 @@ function CategoryAdmin() {
 
       {/* Category table */}
       <section className="relative overflow-x-auto shadow-md sm:rounded-lg">
-        <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+        <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400 border">
+          <thead className="text-[18px] text-white uppercase bg-[#3F4C5A] dark:bg-gray-700 dark:text-gray-400">
             <tr>
               <th scope="col" className="px-6 py-3">
                 Kateqoriyanın adı
@@ -145,15 +129,10 @@ function CategoryAdmin() {
                   >
                     {item.image}
                   </th>
-                  <td className="px-6 py-4 text-right flex gap-6 text-[25px] font-medium text-blue-500 hover:underline">
-                    <BiEdit
-                      onClick={() => handleEdit(item)}
-                      className="ml-auto cursor-pointer"
-                    />
-
+                  <td className="px-6 py-4 text-right flex gap-6 text-[25px] font-medium text-blue-500 hover:underline justify-end">
                     <MdDeleteForever
-                      onClick={() => handleDelete(item.id)}
-                      className="cursor-pointer text-[red]"
+                      onClick={() => setDeletePopup(item.id)}
+                      className="cursor-pointer text-red-500 hover:text-red-700 transition"
                     />
                   </td>
                 </tr>
@@ -172,62 +151,108 @@ function CategoryAdmin() {
       <div
         onClick={() => setAddPopup(false)}
         style={{ display: addPopup ? "flex" : "none" }}
-        className="fixed top-0 left-0 right-0 z-50 items-center bg-[#00000060] justify-center w-full p-4 overflow-x-hidden overflow-y-auto h-[100%]"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity"
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="relative max-w-[400px] bg-white rounded-lg shadow-lg p-6 w-full"
+          className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 animate-fadeIn"
         >
-          <h3 className="text-xl font-semibold mb-4">Yeni Kateqoriya əlavə et</h3>
+          <h3 className="text-2xl font-semibold text-gray-800 mb-4 text-center">
+            Yeni Kateqoriya Əlavə Et
+          </h3>
 
           {/* Error mesajı */}
           {error && (
-            <p className="text-red-600 mb-3 font-medium text-sm">{error}</p>
+            <p className="text-red-500 mb-3 font-medium text-sm bg-red-100 px-3 py-2 rounded-lg">
+              {error}
+            </p>
           )}
 
+          {/* Input */}
+          <label className="block text-sm font-medium text-gray-700 mb-1">Başlıq daxil edin</label>
           <input
             type="text"
-            placeholder="Başlıq"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="border p-2 w-full mb-3 rounded"
+            className="border p-2 w-full mb-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition"
           />
 
+          {/* File upload */}
+          <label className="block text-sm font-medium text-gray-700 mb-1">Şəkil seçin</label>
           <input
+            key={preview}  
             type="file"
             accept="image/*"
             onChange={handleFileChange}
-            className="mb-3"
+            className="mb-3 w-full text-sm file:mr-4 file:py-2 file:px-4 
+                      file:rounded-full file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-green-50 file:text-green-700
+                      hover:file:bg-green-100 cursor-pointer"
           />
+
 
           {/* Preview şəkil */}
           {preview && (
-            <div className="mb-3">
+            <div className="mb-3 flex justify-center">
               <img
                 src={preview}
                 alt="Preview"
-                className="max-h-40 rounded border"
+                className="max-h-40 rounded-lg border shadow-sm"
               />
             </div>
           )}
 
-          <div className="flex justify-end gap-3 mt-4">
+          {/* Buttons */}
+          <div className="flex justify-end gap-3 mt-6">
             <button
               onClick={() => setAddPopup(false)}
-              className="px-4 py-2 bg-gray-400 text-white rounded"
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition"
             >
               Ləğv et
             </button>
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="px-4 py-2 bg-green-600 text-white rounded"
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-lg shadow-md transition"
             >
               {loading ? "Yüklənir..." : "Yadda saxla"}
             </button>
           </div>
         </div>
       </div>
+
+      {/* Delete confirm popup */}
+      {deletePopup && (
+        <div
+          onClick={() => setDeletePopup(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full text-center"
+          >
+            <h2 className="text-lg font-semibold mb-4">
+              Silmək istədiyinizə əminsiniz?
+            </h2>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setDeletePopup(null)}
+                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+              >
+                Ləğv et
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={loading}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400"
+              >
+                {loading ? "Silinir..." : "Bəli, sil"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
